@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block page_content %}
+<H1>{{ hostname }}</H1>
+<p>{{ old['location'] }}</p>
+
+<H1>VLAN IP ADDRESS</H1>
+<table class=table>
+{% for k, v in old['ips']['vlan_ips'].items() %}
+    <tr>
+        <td>Vlan {{ k|e }}: {{ v[0] }}/{{ v[1] }}</td>
+    </tr>
+{% endfor %}
+</table>
+
+<H2>Loopback IP</H2>
+{% for k, v in old['ips']['loopback_ips'].items() %}
+    <dt>Loopback{{ k }}: {{ v[0] }}/{{ v[1] }}</dt>
+{% endfor %}
+
+<H2>VLAN INFO</H2>
+<table class=table>
+    <tr>
+        <th>Vlan ID</th>
+        <th>Vlan Name</th>
+    </tr>
+    {% for k, v in old['vlans'].items() %}
+        <tr>
+            <td>{{ k }}</td>
+            <td>{{ v['name'].upper() }}</td>
+        </tr>
+    {% endfor %}
+</table>
+<h2>CDP Neighbors</h2>
+<table class=table>
+    <tr>
+        <th>Neighbor</th>
+        <th>Remote Port</th>
+        <th>Local Port</th>
+    </tr>
+    {% for k, v in old['cdp'].items() %}
+    <tr>
+        <td>{{ v[0] }}</td>
+        <td>{{ v[1] }}</td>
+        <td>{{ k }}</td>
+    </tr>
+    {% endfor %}
+</table>
+<H2>Port Information</H2>
+<table class=table>
+    <tr>
+        <th>Port</th>
+        <th>Description</th>
+        <th>Vlan</th>
+        <th>Voice Vlan</th>
+    </tr>
+    {% for k, v in new.items() %}
+    <tr>
+        <td>{{ k }}</td>
+        <td>{{ v['description'] }}</td>
+        <td>{{ v['vlan'] }}</td>
+        <td>{{ v['voice'] }}</td>
+    </tr>
+    {% endfor %}
+</table>   
+{% endblock %}
+{# 
+    {k},{juniper_interfaces[k]['description']},{juniper_interfaces[k]['vlan']},{juniper_interfaces[k]['voice']}")
+        #if 'xe' not in k:
+        #    if juniper_interfaces[k]['description'] is not None:
+        #        print(f"set interfaces {k} description \"{juniper_interfaces[k]['description']}\"")
+        #    if juniper_interfaces[k]['vlan'] != "PRODUCTION":
+        #        print(f"delete interfaces {k} unit 0 family ethernet-switching vlan members")
+        #        print(f"set interfaces {k} unit 0 family ethernet-switching vlan members {juniper_interfaces[k]['vlan']}")
+            #else:
+            #    print(f"{k},{juniper_interfaces[k]['description']},{juniper_interfaces[k]['vlan']},{juniper_interfaces[k]['voice']}")
+    print('\nQIP INFO\n')
+    for k, v in dns_info.items():
+        print(k)
+        for key,value in v.items():
+            print(f"{key}: {value['ip']} {value['subnet']}")
+    print('\nCDP\n')
+    print(old['cdp'])
+#}

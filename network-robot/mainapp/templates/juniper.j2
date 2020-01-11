@@ -1,0 +1,248 @@
+<pre>
+annotate groups "--- Config Based On NETI Junos Access Template Rev 0.8 Edited 12/23/2019 ---"
+set groups GP-IF-L2PORT interfaces <ge-*/0/*> unit 0 family ethernet-switching interface-mode access
+set groups GP-IF-L2PORT interfaces <ge-*/0/*> unit 0 family ethernet-switching storm-control default
+set groups GP-IF-DHCP-RELAY-NS1-MAIN routing-instances MAIN forwarding-options dhcp-relay group dhcp-ns1 interface <*>
+set groups GP-IF-DHCP-RELAY-NS2-MAIN routing-instances MAIN forwarding-options dhcp-relay group dhcp-ns2 interface <*>
+set groups GP-VR-DHCP-NS1 routing-instances <*> forwarding-options dhcp-relay server-group dhcp-ns1 137.53.223.44
+set groups GP-VR-DHCP-NS1 routing-instances <*> forwarding-options dhcp-relay server-group dhcp-ns1 10.76.25.10
+set groups GP-VR-DHCP-NS1 routing-instances <*> forwarding-options dhcp-relay server-group dhcp-ns1 10.76.40.7
+set groups GP-VR-DHCP-NS1 routing-instances <*> forwarding-options dhcp-relay group dhcp-ns1 active-server-group dhcp-ns1
+set groups GP-VR-DHCP-NS2 routing-instances <*> forwarding-options dhcp-relay server-group dhcp-ns2 137.53.223.36
+set groups GP-VR-DHCP-NS2 routing-instances <*> forwarding-options dhcp-relay server-group dhcp-ns2 10.76.25.10
+set groups GP-VR-DHCP-NS2 routing-instances <*> forwarding-options dhcp-relay server-group dhcp-ns2 10.76.40.7
+set groups GP-VR-DHCP-NS2 routing-instances <*> forwarding-options dhcp-relay group dhcp-ns2 active-server-group dhcp-ns2
+set groups GP-IF-PIM-SPARSE routing-instances MAIN protocols pim interface <*> mode sparse
+set groups GP-VL-DHCP-SECURITY vlans <*> forwarding-options dhcp-security arp-inspection
+set groups GP-VL-DHCP-SECURITY vlans <*> forwarding-options dhcp-security ip-source-guard
+set groups GP-VL-PORT-SECURITY vlans <*> switch-options interface-mac-limit 3
+set groups GP-VL-PORT-SECURITY vlans <*> switch-options interface-mac-limit packet-action drop-and-log
+set groups GP-IF-IRB-PASSIVE routing-instances <*> protocols ospf area <*> interface "<irb\.*>" passive
+set groups GP-SY-TACPLUS-SERVER system tacplus-server <*> secret "$9$4doDk.P5znC4aDkq.5T/CtOhrleM8X-lK-w2aiHTz3ntuRhr"
+set groups GP-SY-TACPLUS-SERVER system tacplus-server <*> source-address {{ switch['loopback'] }}
+set groups GP-SY-ACCOUNTING-TACPLUS-SERVER system accounting destination tacplus server <*> secret "$9$Vmb4ZUjH.fzVw4ZGUHkTz390IRESreWRhWx-waJk.Pf36p0I"
+set groups GP-SY-ACCOUNTING-TACPLUS-SERVER system accounting destination tacplus server <*> source-address {{ switch['loopback'] }}
+set apply-groups GP-IF-L2PORT
+set apply-groups GP-IF-DHCP-RELAY-{{ switch['nameserver'] }}-MAIN
+set apply-groups GP-VL-DHCP-SECURITY
+set apply-groups GP-VL-PORT-SECURITY
+set apply-groups GP-IF-IRB-PASSIVE
+set apply-groups GP-VR-DHCP-{{ switch['nameserver'] }}
+set apply-groups GP-SY-TACPLUS-SERVER
+set apply-groups GP-SY-ACCOUNTING-TACPLUS-SERVER
+set system host-name {{ switch['hostname'] }}
+set system auto-snapshot
+set system domain-name ohsu.edu
+set system time-zone America/Los_Angeles
+set system authentication-order tacplus
+set system authentication-order password
+set system root-authentication encrypted-password "$1$UEopMymR$4x48vmoVlMeFMTAU7r.lM/"
+set system name-server 137.53.223.44
+set system name-server 137.53.223.36
+set system tacplus-server 10.76.7.60
+set system tacplus-server 10.86.224.14
+set system tacplus-server 10.76.224.104
+set system tacplus-options service-name TACACS
+set system accounting events login
+set system accounting events change-log
+set system accounting events interactive-commands
+set system accounting destination tacplus server 10.76.7.60
+set system accounting destination tacplus server 10.86.224.14
+set system accounting destination tacplus server 10.76.224.104
+set system login announcement "\n\n=============================================\n=============================================\nJUNIPER EX4300\n\nVRF ACCESS\n=============================================\n\nUse 'instance' to reference a routing instance.\nRouting instance (VRF) tables are the name with '.inet.0' after them (MAIN.inet.0, NACINET.inet.0, etc.)\n\nSample commands:\nshow route table MAIN.inet.0\nshow route table NACINET.inet.0\nshow ethernet-switching table\nshow interface terse\nshow ethernet-switching interface\n\n"																				
+set system login message "\n\n                 A U T H O R I Z E D   P E R S O N N E L   O N L Y  ! ! !\n                       For assistance please call the OHSU Helpdesk\n                                     at 503.494.2222\n                             Built by {{ switch['engineer'] }}\n                                  {{ date }}\n                                       {{ switch['hostname'] }}\n\n"																				
+set system login idle-timeout 10																				
+set system login class LIMITED-IPS idle-timeout 10																				
+set system login class LIMITED-IPS permissions configure																				
+set system login class LIMITED-IPS permissions view																				
+set system login class LIMITED-IPS allow-configuration-regexps "vlans .* vlan-id .*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "vlans .* l3-interface .*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "vlans .* switch-options .*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "vlans .* forwarding-options dhcp-security group .* interface .*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "interfaces ge-./0/.* description .*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "interfaces ge-./0/.* unit 0 family ethernet-switching vlan members .*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "interfaces ge-./0/.* unit 0 family ethernet-switching interface-mode access"																				
+set system login class LIMITED-IPS allow-configuration-regexps "interfaces ge-./0/.* disable"																				
+set system login class LIMITED-IPS allow-configuration-regexps "interfaces irb unit .* family inet address .*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "routing-instances .* interface .*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "routing-instances .* forwarding-options dhcp-relay .*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "routing-instances .* protocols ospf area 0.0.0.1 interface .* interface-type .*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "routing-instances .* protocols ospf area 0.0.0.1 interface .* passive"																				
+set system login class LIMITED-IPS allow-configuration-regexps "routing-instances .* protocols ospf area 0.0.0.1 interface irb\.\d+$"																				
+set system login class LIMITED-IPS allow-configuration-regexps "routing-instances .* protocols ospf area 0.0.0.1 interface lo0\.\d+$"																				
+set system login class LIMITED-IPS allow-configuration-regexps "routing-instances .* protocols ospf area 0.0.0.1 interface ge-./0/\d+\.\d+$"																				
+set system login class LIMITED-IPS allow-configuration-regexps "snmp client-list FS-ACCESS .*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "snmp community .*bLU3SK\!Z3.*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "snmp trap-options .*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "snmp trap-group .*bLU3SK\!Z3.*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "switch-options voip .*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "switch-options interface .*"																				
+set system login class LIMITED-IPS allow-configuration-regexps "protocols layer2-control bpdu-block interface .* disable"																				
+set system login class LIMITED-IPS deny-configuration-regexps groups																				
+set system login class LIMITED-IPS deny-configuration-regexps apply-groups																				
+set system login user full-access full-name "TACACS+ mapping for full privileges"																				
+set system login user full-access uid 2001																				
+set system login user full-access class super-user																				
+set system login user netcomm full-name "Netcomm ITG Fallback Account"																				
+set system login user netcomm uid 2000																				
+set system login user netcomm class super-user																				
+set system login user netcomm authentication encrypted-password "$1$CcK23OMr$cOKBZ9qxILi8fu6vzXg/T/"																				
+set system services ssh protocol-version v2																				
+set system services netconf ssh																				
+set system syslog archive files 7																				
+set system syslog user * any alert																				
+set system syslog host 10.76.224.82 any info																				
+set system syslog host 10.76.224.82 facility-override local2																				
+set system syslog host 10.76.224.82 source-address LOOPBACK																				
+set system syslog file messages any notice																				
+set system syslog file messages authorization info																				
+set system syslog file interactive-commands interactive-commands any																				
+set system syslog console any info																				
+set system syslog time-format																				
+set system syslog source-address {{ switch['loopback'] }}
+set system archival configuration transfer-on-commit																				
+set system archival configuration archive-sites "scp://netcomm@10.76.224.82/tftpboot/junos-configs" password "$9$An5PpORKM8N-wylb2goGUApu0BI"
+set system processes dhcp-service traceoptions file dhcp_logfile
+set system processes dhcp-service traceoptions file size 10m
+set system processes dhcp-service traceoptions level all
+set system processes dhcp-service traceoptions flag all
+set system processes dhcp-service dhcp-snooping-file dhcp-bindings.db
+set system processes dhcp-service dhcp-snooping-file write-interval 60
+set system ntp boot-server 137.53.1.40
+set system ntp server 137.53.1.40 version 4
+set system ntp server 137.53.10.2 version 4
+set system ntp source-address {{ switch['loopback'] }}
+set chassis alarm management-ethernet link-down ignore
+wildcard range set chassis lcd-menu fpc [0-{{ switch['mgmt_range_end'] }}] menu-item maintenance-menu disable
+set security ssh-known-hosts host 10.76.224.82 ecdsa-sha2-nistp256-key AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEK5IfjFsM7X3VfR3EMQjuJSnkIn2+dn/ZJNAFnkHXIcTwqdClOtuYet7QsjtDGRbkWf6p6CRWrlaJaKoJc/XeM=																				
+delete interfaces																				
+wildcard range set interfaces ge-[0-{{ switch['members'] - 1 }}]/0/[0-47] unit 0 family ethernet-switching vlan members PRODUCTION
+wildcard range delete interfaces ge-[0-{{ switch['mgmt_range_end'] }}]/0/[39-47] unit 0 family ethernet-switching vlan members PRODUCTION
+wildcard range set interfaces ge-[0-{{ switch['mgmt_range_end'] }}]/0/[39-47] description "Reserved for NETI"
+wildcard range set interfaces ge-[0-{{ switch['mgmt_range_end'] }}]/0/[39-47] unit 0 family ethernet-switching vlan members MANAGEMENT
+wildcard range set interfaces ge-[0-{{ switch['members'] - 1 }}]/2/[0-3] disable
+delete interfaces ge-0/2/3 disable
+delete interfaces ge-1/2/3 disable
+set interfaces ge-0/2/3 vlan-tagging
+</pre>
+{% for key in switch['vlan_ips'].keys() %}
+{% set vlan = key|int // 100 %}
+{% if vlan >= 22 %}
+{% if vlan is even %}
+<pre>
+set interfaces ge-0/2/3.{{ key }} vlan-id {{ key }} 
+set interfaces ge-0/2/3.{{ key }} family inet address {{ switch['vlan_ips'][key][0] }}/{{ switch['vlan_ips'][key][1] }}
+</pre>
+{% elif vlan is odd %}
+<pre>
+set interfaces ge-1/2/3.{{ key }} vlan-id {{ key }} 
+set interfaces ge-1/2/3.{{ key }} family inet address {{ switch['vlan_ips'][key][0] }}/{{ switch['vlan_ips'][key][1] }}
+</pre>
+{% endif %}
+{% endif %}
+{% endfor %}
+<pre>
+delete interfaces ge-0/2/3.0																				
+delete interfaces ge-1/2/3.0	
+set interfaces irb unit 100 family inet address {{ switch['vrrp']['100']['vrrp'] }} vrrp-group 10 virtual-address {{ switch['vrrp']['100']['ip'] }}  																				
+set interfaces irb unit 100 family inet address {{ switch['vrrp']['100']['vrrp'] }} vrrp-group 10 priority 200																				
+set interfaces irb unit 100 family inet address {{ switch['vrrp']['100']['vrrp'] }} vrrp-group 10 preempt																				
+set interfaces irb unit 100 family inet address {{ switch['vrrp']['100']['vrrp'] }} vrrp-group 10 accept-data																				
+set interfaces irb unit 300 family inet address {{ switch['vrrp']['300']['vrrp'] }} vrrp-group 30 virtual-address {{ switch['vrrp']['300']['ip'] }}																				
+set interfaces irb unit 300 family inet address {{ switch['vrrp']['300']['vrrp'] }} vrrp-group 30 priority 200																				
+set interfaces irb unit 300 family inet address {{ switch['vrrp']['300']['vrrp'] }} vrrp-group 30 preempt																				
+set interfaces irb unit 300 family inet address {{ switch['vrrp']['300']['vrrp'] }} vrrp-group 30 accept-data																				
+set interfaces irb unit 555 family inet address {{ switch['vrrp']['555']['vrrp'] }} vrrp-group 55 virtual-address {{ switch['vrrp']['555']['ip'] }}																				
+set interfaces irb unit 555 family inet address {{ switch['vrrp']['555']['vrrp'] }} vrrp-group 55 priority 200																				
+set interfaces irb unit 555 family inet address {{ switch['vrrp']['555']['vrrp'] }} vrrp-group 55 preempt																				
+set interfaces irb unit 555 family inet address {{ switch['vrrp']['555']['vrrp'] }} vrrp-group 55 accept-data																				
+set interfaces irb unit 701 family inet address {{ switch['vrrp']['701']['vrrp'] }} vrrp-group 71 virtual-address {{ switch['vrrp']['701']['ip'] }}																				
+set interfaces irb unit 701 family inet address {{ switch['vrrp']['701']['vrrp'] }} vrrp-group 71 priority 200																				
+set interfaces irb unit 701 family inet address {{ switch['vrrp']['701']['vrrp'] }} vrrp-group 71 preempt																				
+set interfaces irb unit 701 family inet address {{ switch['vrrp']['701']['vrrp'] }} vrrp-group 71 accept-data 																			
+set interfaces irb unit 702 family inet address {{ switch['vrrp']['702']['vrrp'] }} vrrp-group 72 virtual-address {{ switch['vrrp']['702']['ip'] }}																					
+set interfaces irb unit 702 family inet address {{ switch['vrrp']['702']['vrrp'] }} vrrp-group 72 priority 200																				
+set interfaces irb unit 702 family inet address {{ switch['vrrp']['702']['vrrp'] }} vrrp-group 72 preempt																				
+set interfaces irb unit 702 family inet address {{ switch['vrrp']['702']['vrrp'] }} vrrp-group 72 accept-data																				
+set interfaces irb unit 703 family inet address {{ switch['vrrp']['703']['vrrp'] }} vrrp-group 73 virtual-address {{ switch['vrrp']['703']['ip'] }}																				
+set interfaces irb unit 703 family inet address {{ switch['vrrp']['703']['vrrp'] }} vrrp-group 73 priority 200																				
+set interfaces irb unit 703 family inet address {{ switch['vrrp']['703']['vrrp'] }} vrrp-group 73 preempt																				
+set interfaces irb unit 703 family inet address {{ switch['vrrp']['703']['vrrp'] }} vrrp-group 73 accept-data																				
+set interfaces lo0 unit 0 family inet address {{ switch['loopback'] }}/32																				
+set interfaces lo0 unit 12 family inet primary																				
+set interfaces lo0 unit 12 family inet address {{ switch['loopback'] }}/32																				
+set interfaces vme unit 0 family inet dhcp client-identifier prefix host-name																				
+set interfaces vme unit 0 family inet dhcp vendor-id Juniper-ex4300-48p																				
+set snmp description "{{ switch['hostname'] }}																				
+set snmp location "{{ switch['location'] }}"																				
+set snmp contact "netcomm@ohsu.edu 503-494-2222"																				
+set snmp client-list RO-ACCESS 10.81.224.0/24																				
+set snmp client-list RO-ACCESS 10.86.224.0/24																				
+set snmp client-list RO-ACCESS 137.53.186.0/24																				
+set snmp client-list RO-ACCESS 10.76.224.0/24																				
+set snmp client-list RO-ACCESS 10.77.224.0/24																				
+set snmp client-list RO-ACCESS 10.78.86.0/24																				
+set snmp client-list RO-ACCESS 10.78.87.0/24																				
+set snmp client-list RO-ACCESS 10.130.224.0/24																				
+set snmp client-list RO-ACCESS 10.133.224.0/24																				
+set snmp client-list RO-ACCESS 10.144.224.0/24																				
+set snmp client-list RO-ACCESS 10.149.224.0/24																				
+set snmp client-list RO-ACCESS 10.154.224.0/24																				
+set snmp client-list RO-ACCESS 10.188.6.224/27																				
+set snmp client-list RO-ACCESS 10.150.20.0/24																				
+set snmp client-list RO-ACCESS 10.156.20.0/24																				
+set snmp client-list RO-ACCESS 10.154.20.0/24																				
+set snmp client-list RO-ACCESS 10.80.20.0/24																				
+set snmp client-list RO-ACCESS 10.150.255.0/24																				
+set snmp client-list RO-ACCESS 10.154.255.0/24																				
+set snmp client-list RO-ACCESS 10.156.255.0/24																				
+set snmp client-list RO-ACCESS 10.80.225.0/24																				
+set snmp client-list RW-ACCESS 10.86.224.0/24																				
+set snmp client-list RW-ACCESS 10.81.224.0/24																				
+set snmp client-list RW-ACCESS 137.53.186.0/24																				
+set snmp client-list RW-ACCESS 10.76.224.0/24																				
+set snmp client-list RW-ACCESS 10.77.224.0/24																				
+set snmp client-list RW-ACCESS 10.78.86.0/24																				
+set snmp client-list RW-ACCESS 10.78.87.0/24																				
+set snmp client-list RW-ACCESS 10.130.224.0/24																				
+set snmp client-list RW-ACCESS 10.133.224.0/24																				
+set snmp client-list RW-ACCESS 10.144.224.0/24																				
+set snmp client-list RW-ACCESS 10.149.224.0/24																				
+set snmp client-list RW-ACCESS 10.154.224.0/24																				
+set snmp client-list RW-ACCESS 10.86.6.224/27																				
+set snmp client-list FS-ACCESS 10.76.40.0/25																				
+set snmp community read authorization read-only																				
+set snmp community read client-list-name RO-ACCESS																				
+set snmp community imthe1 authorization read-write																				
+set snmp community imthe1 client-list-name RW-ACCESS																				
+set snmp community "bLU3SK!Z3" authorization read-write																				
+set snmp community "bLU3SK!Z3" client-list-name FS-ACCESS																				
+set snmp trap-options routing-instance MAIN source-address {{ switch['loopback'] }}
+set snmp trap-group "bLU3SK!Z3" categories link
+set snmp trap-group "bLU3SK!Z3" categories services
+set snmp trap-group "bLU3SK!Z3" targets 10.76.40.7
+set snmp trap-group "bLU3SK!Z3" routing-instance MAIN
+set forwarding-options storm-control-profiles default all
+set routing-options static route 0.0.0.0/0 next-table MAIN.inet.0
+set protocols igmp interface all version 3
+set protocols ospf reference-bandwidth 1000g
+set protocols vrrp version-3
+set protocols lldp interface all
+set protocols lldp-med interface all
+set protocols lldp port-id-subtype interface-name
+set protocols igmp-snooping vlan default
+set protocols layer2-control bpdu-block interface all
+set protocols layer2-control bpdu-block interface ae0 disable
+delete protocols rstp interface
+set protocols rstp bridge-priority 0
+set protocols rstp interface all edge
+set routing-instances MAIN instance-type virtual-router
+set routing-instances MAIN interface xe-0/2/3.2200
+set routing-instances MAIN interface xe-1/2/3.2300
+set routing-instances MAIN interface irb.100
+set routing-instances MAIN interface irb.300
+set routing-instances MAIN interface irb.555
+set routing-instances MAIN interface lo0.12
+set routing-instances MAIN routing-options router-id {{ switch['loopback'] }}
+
+
