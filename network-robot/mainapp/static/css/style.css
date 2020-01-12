@@ -1,0 +1,20 @@
+.table {
+    border-collapse: collapse;
+    width: 100%;
+}
+.table > thead > tr > th {
+    border-top: 2px solid black;
+}
+.mytr {
+    border-top: 2px solid black;
+}
+
+tr:nth-child(even) {background-color: #A6A4AB}
+tr:nth_child(odd) {background-color: #FFF}
+
+td {
+    padding: 2px;
+    border: 2px solid black;
+    border-top: 2px solid black;
+}
+
