@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block page_content %}
+Hello
+{% for vlan in form.vlans %}
+    {{ vlan.hidden_tag() }}
+    {# Flask-WTF needs `hidden_tag()` so CSRF works for each form #}
+<div>{{ vlan.vlan_id }}{{ vlan.vlan_name }}</div>
+{% endfor %}
+{% endblock %}

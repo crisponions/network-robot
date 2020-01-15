@@ -1,9 +1,26 @@
+body {
+    font-size: 1.5em;
+    line-height: 2;
+ }
 .table {
     border-collapse: collapse;
     width: 100%;
 }
+.table > tbody > tr > th {
+    border-top: 2px solid black;
+    border: 2px solid black;
+}
+.table > tbody > tr > td {
+    border-top: 2px solid black;
+    border: 2px solid black;
+}
 .table > thead > tr > th {
     border-top: 2px solid black;
+    border: 2px solid black;
+}
+.table > thead > tr > td {
+    border-top: 2px solid black;
+    border: 2px solid black;
 }
 .mytr {
     border-top: 2px solid black;
@@ -12,7 +29,13 @@
 tr:nth-child(even) {background-color: #A6A4AB}
 tr:nth_child(odd) {background-color: #FFF}
 
-td {
+.table > td {
+    padding: 2px;
+    border: 2px solid black;
+    border-top: 2px solid black;
+}
+
+.table > th {
     padding: 2px;
     border: 2px solid black;
     border-top: 2px solid black;

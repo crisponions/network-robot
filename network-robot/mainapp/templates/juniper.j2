@@ -50,7 +50,7 @@ set system accounting destination tacplus server 10.76.7.60
 set system accounting destination tacplus server 10.86.224.14
 set system accounting destination tacplus server 10.76.224.104
 set system login announcement "\n\n=============================================\n=============================================\nJUNIPER EX4300\n\nVRF ACCESS\n=============================================\n\nUse 'instance' to reference a routing instance.\nRouting instance (VRF) tables are the name with '.inet.0' after them (MAIN.inet.0, NACINET.inet.0, etc.)\n\nSample commands:\nshow route table MAIN.inet.0\nshow route table NACINET.inet.0\nshow ethernet-switching table\nshow interface terse\nshow ethernet-switching interface\n\n"																				
-set system login message "\n\n                 A U T H O R I Z E D   P E R S O N N E L   O N L Y  ! ! !\n                       For assistance please call the OHSU Helpdesk\n                                     at 503.494.2222\n                             Built by {{ switch['engineer'] }}\n                                  {{ date }}\n                                       {{ switch['hostname'] }}\n\n"																				
+set system login message "\n\n                 A U T H O R I Z E D   P E R S O N N E L   O N L Y  ! ! !\n                       For assistance please call the OHSU Helpdesk\n                                     at 503.494.2222\n                             Built by {{ engineer }}\n                                  {{ date }}\n                                       {{ switch['hostname'] }}\n\n"																				
 set system login idle-timeout 10																				
 set system login class LIMITED-IPS idle-timeout 10																				
 set system login class LIMITED-IPS permissions configure																				
@@ -93,7 +93,7 @@ set system syslog archive files 7
 set system syslog user * any alert																				
 set system syslog host 10.76.224.82 any info																				
 set system syslog host 10.76.224.82 facility-override local2																				
-set system syslog host 10.76.224.82 source-address LOOPBACK																				
+set system syslog host 10.76.224.82 source-address {{ switch['loopback'] }}																				
 set system syslog file messages any notice																				
 set system syslog file messages authorization info																				
 set system syslog file interactive-commands interactive-commands any																				
@@ -102,6 +102,7 @@ set system syslog time-format
 set system syslog source-address {{ switch['loopback'] }}
 set system archival configuration transfer-on-commit																				
 set system archival configuration archive-sites "scp://netcomm@10.76.224.82/tftpboot/junos-configs" password "$9$An5PpORKM8N-wylb2goGUApu0BI"
+set system license keys key "{{ license1 }}"																				
 set system processes dhcp-service traceoptions file dhcp_logfile
 set system processes dhcp-service traceoptions file size 10m
 set system processes dhcp-service traceoptions level all
@@ -120,30 +121,30 @@ wildcard range set interfaces ge-[0-{{ switch['members'] - 1 }}]/0/[0-47] unit 0
 wildcard range delete interfaces ge-[0-{{ switch['mgmt_range_end'] }}]/0/[39-47] unit 0 family ethernet-switching vlan members PRODUCTION
 wildcard range set interfaces ge-[0-{{ switch['mgmt_range_end'] }}]/0/[39-47] description "Reserved for NETI"
 wildcard range set interfaces ge-[0-{{ switch['mgmt_range_end'] }}]/0/[39-47] unit 0 family ethernet-switching vlan members MANAGEMENT
-wildcard range set interfaces ge-[0-{{ switch['members'] - 1 }}]/2/[0-3] disable
-delete interfaces ge-0/2/3 disable
-delete interfaces ge-1/2/3 disable
-set interfaces ge-0/2/3 vlan-tagging
+wildcard range set interfaces {{ uplink }}-[0-{{ switch['members'] - 1 }}]/2/[0-3] disable
+delete interfaces {{ uplink }}-0/2/3 disable
+delete interfaces {{ uplink }}-1/2/3 disable
+set interfaces {{ uplink }}-0/2/3 vlan-tagging
 </pre>
 {% for key in switch['vlan_ips'].keys() %}
 {% set vlan = key|int // 100 %}
 {% if vlan >= 22 %}
 {% if vlan is even %}
 <pre>
-set interfaces ge-0/2/3.{{ key }} vlan-id {{ key }} 
-set interfaces ge-0/2/3.{{ key }} family inet address {{ switch['vlan_ips'][key][0] }}/{{ switch['vlan_ips'][key][1] }}
+set interfaces {{ uplink }}-0/2/3.{{ key }} vlan-id {{ key }} 
+set interfaces {{ uplink }}-0/2/3.{{ key }} family inet address {{ switch['vlan_ips'][key][0] }}/{{ switch['vlan_ips'][key][1] }}
 </pre>
 {% elif vlan is odd %}
 <pre>
-set interfaces ge-1/2/3.{{ key }} vlan-id {{ key }} 
-set interfaces ge-1/2/3.{{ key }} family inet address {{ switch['vlan_ips'][key][0] }}/{{ switch['vlan_ips'][key][1] }}
+set interfaces {{ uplink }}-1/2/3.{{ key }} vlan-id {{ key }} 
+set interfaces {{ uplink }}-1/2/3.{{ key }} family inet address {{ switch['vlan_ips'][key][0] }}/{{ switch['vlan_ips'][key][1] }}
 </pre>
 {% endif %}
 {% endif %}
 {% endfor %}
 <pre>
-delete interfaces ge-0/2/3.0																				
-delete interfaces ge-1/2/3.0	
+delete interfaces {{ uplink }}-0/2/3.0																				
+delete interfaces {{ uplink }}-1/2/3.0	
 set interfaces irb unit 100 family inet address {{ switch['vrrp']['100']['vrrp'] }} vrrp-group 10 virtual-address {{ switch['vrrp']['100']['ip'] }}  																				
 set interfaces irb unit 100 family inet address {{ switch['vrrp']['100']['vrrp'] }} vrrp-group 10 priority 200																				
 set interfaces irb unit 100 family inet address {{ switch['vrrp']['100']['vrrp'] }} vrrp-group 10 preempt																				
@@ -173,7 +174,7 @@ set interfaces lo0 unit 12 family inet primary
 set interfaces lo0 unit 12 family inet address {{ switch['loopback'] }}/32																				
 set interfaces vme unit 0 family inet dhcp client-identifier prefix host-name																				
 set interfaces vme unit 0 family inet dhcp vendor-id Juniper-ex4300-48p																				
-set snmp description "{{ switch['hostname'] }}																				
+set snmp description "{{ switch['hostname'] }}"																				
 set snmp location "{{ switch['location'] }}"																				
 set snmp contact "netcomm@ohsu.edu 503-494-2222"																				
 set snmp client-list RO-ACCESS 10.81.224.0/24																				
@@ -237,12 +238,115 @@ delete protocols rstp interface
 set protocols rstp bridge-priority 0
 set protocols rstp interface all edge
 set routing-instances MAIN instance-type virtual-router
-set routing-instances MAIN interface xe-0/2/3.2200
-set routing-instances MAIN interface xe-1/2/3.2300
+set routing-instances MAIN interface {{ uplink }}-0/2/3.22{{ switch['vlan_index'] }}
+set routing-instances MAIN interface {{ uplink }}-1/2/3.23{{ switch['vlan_index'] }}
 set routing-instances MAIN interface irb.100
 set routing-instances MAIN interface irb.300
 set routing-instances MAIN interface irb.555
 set routing-instances MAIN interface lo0.12
 set routing-instances MAIN routing-options router-id {{ switch['loopback'] }}
+set routing-instances MAIN forwarding-options dhcp-relay group dhcp-{{ switch['nameserver'].lower() }} interface irb.300
+set routing-instances MAIN forwarding-options dhcp-relay group dhcp-{{ switch['nameserver'].lower() }} interface irb.555
+set routing-instances MAIN forwarding-options dhcp-relay group dhcp-{{ switch['nameserver'].lower() }} interface irb.100
+set routing-instances MAIN protocols ospf reference-bandwidth 1000g																				
+set routing-instances MAIN protocols ospf area 0.0.0.1 interface lo0.12																				
+set routing-instances MAIN protocols ospf area 0.0.0.1 interface {{ uplink }}-0/2/3.22{{ switch['vlan_index'] }} interface-type p2p																				
+set routing-instances MAIN protocols ospf area 0.0.0.1 interface {{ uplink }}-0/2/3.22{{ switch['vlan_index'] }} authentication md5 1 key "$9$.5F6p0B1ESM8kmT3tp0B1"																				
+set routing-instances MAIN protocols ospf area 0.0.0.1 interface {{ uplink }}-1/2/3.23{{ switch['vlan_index'] }} interface-type p2p																				
+set routing-instances MAIN protocols ospf area 0.0.0.1 interface {{ uplink }}-1/2/3.23{{ switch['vlan_index'] }} authentication md5 1 key "$9$.5F6p0B1ESM8kmT3tp0B1"																				
+set routing-instances MAIN protocols ospf area 0.0.0.1 interface irb.100																				
+set routing-instances MAIN protocols ospf area 0.0.0.1 interface irb.300																				
+set routing-instances MAIN protocols ospf area 0.0.0.1 interface irb.555																				
+set routing-instances MAIN protocols pim rp static address 192.168.200.252																				
+set routing-instances MAIN protocols pim interface all mode sparse																				
+set routing-instances NACAUTH instance-type virtual-router																				
+set routing-instances NACAUTH interface {{ uplink }}-0/2/3.28{{ switch['vlan_index'] }}																			
+set routing-instances NACAUTH interface {{ uplink }}-1/2/3.29{{ switch['vlan_index'] }}																				
+set routing-instances NACAUTH interface irb.702																				
+set routing-instances NACAUTH routing-options router-id {{ switch['loopback'] }}																				
+set routing-instances NACAUTH forwarding-options dhcp-relay group dhcp-{{ switch['nameserver'].lower() }} interface irb.702																				
+set routing-instances NACAUTH protocols ospf reference-bandwidth 1000g																				
+set routing-instances NACAUTH protocols ospf area 0.0.0.1 interface {{ uplink }}-0/2/3.28{{ switch['vlan_index'] }} interface-type p2p																				
+set routing-instances NACAUTH protocols ospf area 0.0.0.1 interface {{ uplink }}-0/2/3.28{{ switch['vlan_index'] }} authentication md5 1 key "$9$FWOQ/t0EcyrKW-VQ39pREcyr"																				
+set routing-instances NACAUTH protocols ospf area 0.0.0.1 interface {{ uplink }}-1/2/3.29{{ switch['vlan_index'] }} interface-type p2p																				
+set routing-instances NACAUTH protocols ospf area 0.0.0.1 interface {{ uplink }}-1/2/3.29{{ switch['vlan_index'] }} authentication md5 1 key "$9$FWOQ/t0EcyrKW-VQ39pREcyr"																				
+set routing-instances NACAUTH protocols ospf area 0.0.0.1 interface irb.702																				
+set routing-instances NACFAIL interface {{ uplink }}-1/2/3.27{{ switch['vlan_index'] }}																				
+set routing-instances NACFAIL interface irb.701																				
+set routing-instances NACFAIL routing-options router-id {{ switch['loopback'] }}																				
+set routing-instances NACFAIL forwarding-options dhcp-relay group dhcp-{{ switch['nameserver'].lower() }} interface irb.701																				
+set routing-instances NACFAIL protocols ospf reference-bandwidth 1000g																				
+set routing-instances NACFAIL protocols ospf area 0.0.0.1 interface {{ uplink }}-0/2/3.26{{ switch['vlan_index'] }} interface-type p2p																				
+set routing-instances NACFAIL protocols ospf area 0.0.0.1 interface {{ uplink }}-0/2/3.26{{ switch['vlan_index'] }} authentication md5 1 key "$9$1IChrKX7-dw2GDOIclLX7-d"																				
+set routing-instances NACFAIL protocols ospf area 0.0.0.1 interface {{ uplink }}-1/2/3.27{{ switch['vlan_index'] }} interface-type p2p																				
+set routing-instances NACFAIL protocols ospf area 0.0.0.1 interface {{ uplink }}-1/2/3.27{{ switch['vlan_index'] }} authentication md5 1 key "$9$1IChrKX7-dw2GDOIclLX7-d"																				
+set routing-instances NACFAIL protocols ospf area 0.0.0.1 interface irb.701																				
+set routing-instances NACINET instance-type virtual-router																				
+set routing-instances NACINET interface {{ uplink }}-0/2/3.30{{ switch['vlan_index'] }}																				
+set routing-instances NACINET interface {{ uplink }}-1/2/3.31{{ switch['vlan_index'] }}																				
+set routing-instances NACINET interface irb.703																				
+set routing-instances NACINET routing-options router-id {{ switch['loopback'] }}																				
+set routing-instances NACINET forwarding-options dhcp-relay group dhcp-{{ switch['nameserver'].lower() }} interface irb.703																				
+set routing-instances NACINET protocols ospf reference-bandwidth 1000g																				
+set routing-instances NACINET protocols ospf area 0.0.0.1 interface irb.703																				
+set routing-instances NACINET protocols ospf area 0.0.0.1 interface {{ uplink }}-0/2/3.30{{ switch['vlan_index'] }} interface-type p2p																				
+set routing-instances NACINET protocols ospf area 0.0.0.1 interface {{ uplink }}-0/2/3.30{{ switch['vlan_index'] }} authentication md5 1 key "$9$DakPT69At01ylGjqfn69At"																				
+set routing-instances NACINET protocols ospf area 0.0.0.1 interface {{ uplink }}-1/2/3.31{{ switch['vlan_index'] }} interface-type p2p																				
+set routing-instances NACINET protocols ospf area 0.0.0.1 interface {{ uplink }}-1/2/3.31{{ switch['vlan_index'] }} authentication md5 1 key "$9$DakPT69At01ylGjqfn69At"																				
+set switch-options voip interface access-ports vlan VOIP																				
+set switch-options voip interface access-ports forwarding-class assured-forwarding																				
+set switch-options interface ae0.0 interface-mac-limit disable
+set poe management class																				
+set poe interface all maximum-power 30																				
+set virtual-chassis member 0 mastership-priority 255																				
+set virtual-chassis member 1 mastership-priority 255																				
+set vlans MANAGEMENT vlan-id 555																				
+set vlans MANAGEMENT l3-interface irb.555																				
+set vlans NACAUTH vlan-id 702																				
+set vlans NACAUTH l3-interface irb.702																				
+set vlans NACFAIL vlan-id 701																				
+set vlans NACFAIL l3-interface irb.701																				
+set vlans NACINET vlan-id 703																				
+set vlans NACINET l3-interface irb.703																				
+set vlans PRODUCTION vlan-id 100																				
+set vlans PRODUCTION l3-interface irb.100																				
+set vlans VOIP vlan-id 300																				
+set vlans VOIP l3-interface irb.300																				
+set vlans VOIP switch-options interface-mac-limit 2																				
+set vlans default vlan-id 1	
 
+######################################
+##     INTERREGION INFORMATION      ##
+######################################
+{% if switch['interregion'] is none %}
+
+*** INTERREGION Information not found ***
+{% else %}
+{% if uplink == 'xe' %}
+set interfaces ae0 aggregated-ether-options link-speed 10g	
+{% else %}	
+set interfaces ae0 aggregated-ether-options link-speed 1g
+{% endif %}															
+set interfaces ae0 aggregated-ether-options lacp active																	
+set interfaces ae0 unit 0 family ethernet-switching interface-mode trunk																	
+set interfaces ae0 unit 0 family ethernet-switching vlan members ENGINEERING																	
+set interfaces ae0 unit 0 family ethernet-switching vlan members MANAGEMENT																	
+set interfaces ae0 unit 0 family ethernet-switching vlan members NACAUTH																	
+set interfaces ae0 unit 0 family ethernet-switching vlan members NACFAIL																	
+set interfaces ae0 unit 0 family ethernet-switching vlan members NACINET																	
+set interfaces ae0 unit 0 family ethernet-switching vlan members PRODUCTION																	
+set interfaces ae0 unit 0 family ethernet-switching vlan members VOIP																	
+set interfaces ae0 unit 0 family ethernet-switching vlan members default																	
+set interfaces ae0 unit 0 family ethernet-switching storm-control default																	
+set protocols rstp interface ae0																	
+
+set interfaces ae0 unit 0 family ethernet-switching vlan members L3-INTERREGION																	
+set interfaces irb unit 2399 family inet address {{ switch['interregion'] }}																
+set routing-instances MAIN interface irb.2399																	
+set routing-instances MAIN protocols ospf area 0.0.0.1 interface irb.2399 apply-groups-except GP-IF-IRB-PASSIVE																	
+set routing-instances MAIN protocols ospf area 0.0.0.1 interface irb.2399 interface-type p2p																	
+set routing-instances MAIN protocols ospf area 0.0.0.1 interface irb.2399 authentication md5 1 key "$9$.5F6p0B1ESM8kmT3tp0B1"																	
+set vlans L3-INTERREGION vlan-id 2399																	
+set vlans L3-INTERREGION l3-interface irb.2399																	
+{% endif %}
 

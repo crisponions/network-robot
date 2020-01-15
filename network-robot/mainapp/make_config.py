@@ -59,9 +59,13 @@ def rename_cisco_to_junos(cisco_switch):
 def create_template(old_switch_info, dns_records):
     new_switch = dict()
     new_switch['loopback'] = find_new_loopback(old_switch_info['hostname'], dns_records)
+    new_switch['interregion'] = find_interregion(old_switch_info['hostname'], dns_records)
     new_switch['nameserver'] = old_switch_info['nameserver']
     new_switch['members'] = old_switch_info['members']
     new_switch['vlans'] = old_switch_info['vlans']
+    new_switch['hostname'] = old_switch_info['hostname']
+    new_switch['location'] = old_switch_info['location']
+    new_switch['vlan_index'] = old_switch_info['vlan_index']
     if new_switch['members'] > 1:
         new_switch['mgmt_range_end'] = 1
     else:
@@ -75,13 +79,23 @@ def find_new_loopback(hostname, dns_records):
         if item['name'].lower() == '{}-new.ohsu.edu'.format(hostname.lower()):
             return item['address']
 
+def find_interregion(hostname, dns_records):
+    for item in dns_records:
+        if 'irb' in item['name'].lower() and '2399' in item['name'].lower():
+            return item['address']
+
 def find_vrrp_addresses(vlans, vlan_ips, dns_records):
     vrrp = dict()
+    vlan_re = re.compile('.*(?:vlan|vl)(\d{2,4}).*(?:vrrp|hsrp)?.*')
+    vrrp_re = re.compile('.*-old-(?:vlan|vl)(\d{2,4}).*(?:vrrp|hsrp)?.*')
     for item in dns_records:
-        is_vlan = re.match('.*(vlan|vl)(\d{2,4})\..*',item['name'].lower())
-        is_vrrp = re.match('.*-old-(vlan|vl)(\d{2,4}).*vrrp.*',item['name'].lower())
+        is_vlan = re.match('.*(vlan|vl)(\d{2,4}).*\..*',item['name'].lower())
+        is_vrrp = re.match('.*-old-(vlan|vl)(\d{2,4}).*(vrrp|hsrp).*',item['name'].lower())
         if is_vlan:
-            if is_vlan.group(2) in vlans.keys():
+            # check if vrrp and hsrp in name, check on better logic later
+            if 'vrrp' in item['name'].lower() or 'hsrp' in item['name'].lower():
+                pass
+            elif is_vlan.group(2) in vlans.keys():
                 subnet = vlan_ips[is_vlan.group(2)][1]
                 vrrp[is_vlan.group(2)] = {'ip': '', 'vrrp': ''}
                 vrrp[is_vlan.group(2)]['ip'] = "{}/{}".format(item['address'],subnet)
@@ -91,51 +105,6 @@ def find_vrrp_addresses(vlans, vlan_ips, dns_records):
                 vrrp[is_vrrp.group(2)]['vrrp'] = "{}/{}".format(item['address'],subnet)
     return vrrp
 
-def main(hostname, username, password):
-    new_swicth = dict()
-    #hostname = 'ceia6c1'
-    hostname = hostname
-    #tmp = hash_stuff()
-    username = username
-    password = password
-    #ips = get_switch_ips(hostname,username,password)
-    #print(ips)
-    #print(parse_switch_ips(hostname,username,password))
-    #old = gather_old_switch_info(hostname,username,password)
-    #print(f'Getting DNS information for {hostname}')
-    dns_info = get_switch_ips(hostname,username,password)
-    print(find_new_loopback(dns_info))
-    '''#rename_vlan_port_list(old['vlans'])
-    
-    print('LOCATION')
-    print(old['location'])
-    print('\nVLAN IP ADDRESSes')
-    for k, v in old['ips']['vlan_ips'].items():
-        print(f"Vlan{k},{v[0]}\{v[1]}")
-    print('\nLOOPBACK IPs')
-    for k, v in old['ips']['loopback_ips'].items():
-        print(f"Loopback{k},{v[0]}\{v[1]}")
-    print('\nVLAN INFO')
-    print('Vlan ID,Vlan Name')
-    for k, v in old['vlans'].items():
-        print(f"{k},{v['name'].upper()}")
-    print('\nPort,Description,Vlan,Voice Vlan')
-    for k, v in juniper_interfaces.items():
-        print(f"{k},{juniper_interfaces[k]['description']},{juniper_interfaces[k]['vlan']},{juniper_interfaces[k]['voice']}")
-        #if 'xe' not in k:
-        #    if juniper_interfaces[k]['description'] is not None:
-        #        print(f"set interfaces {k} description \"{juniper_interfaces[k]['description']}\"")
-        #    if juniper_interfaces[k]['vlan'] != "PRODUCTION":
-        #        print(f"delete interfaces {k} unit 0 family ethernet-switching vlan members")
-        #        print(f"set interfaces {k} unit 0 family ethernet-switching vlan members {juniper_interfaces[k]['vlan']}")
-            #else:
-            #    print(f"{k},{juniper_interfaces[k]['description']},{juniper_interfaces[k]['vlan']},{juniper_interfaces[k]['voice']}")
-    print('\nQIP INFO\n')
-    for k, v in dns_info.items():
-        print(k)
-        for key,value in v.items():
-            print(f"{key}: {value['ip']} {value['subnet']}")
-    print('\nCDP\n')
-    print(old['cdp'])'''
-if __name__ == "__main__":
-    main()
+def extract_vrrp_address(dnsrecord):
+    is_vrrp = re.match('.*-old-(vlan|vl)(\d{2,4}).*(vrrp|hsrp).*', dnsrecord.lower())
+
